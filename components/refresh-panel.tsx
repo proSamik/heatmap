@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, RefreshCw, Calendar, Lock, Eye, EyeOff } from "lucide-react"
+import { Loader2, RefreshCw, Calendar, Lock, Eye, EyeOff, Share, Download } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface RefreshPanelProps {
@@ -108,6 +108,50 @@ export function RefreshPanel({ onRefreshComplete }: RefreshPanelProps) {
   }
 
   const isLoading = loading.github || loading.youtube
+  const [shareLoading, setShareLoading] = useState(false)
+
+  const shareHeatmap = async (platform: 'github' | 'youtube' | 'both') => {
+    setShareLoading(true)
+    try {
+      let elementId = ''
+      let filename = ''
+      
+      if (platform === 'both') {
+        elementId = 'heatmaps-container'
+        filename = 'github-youtube-heatmaps.png'
+      } else if (platform === 'github') {
+        elementId = 'github-heatmap'
+        filename = 'github-heatmap.png'
+      } else {
+        elementId = 'youtube-heatmap'
+        filename = 'youtube-heatmap.png'
+      }
+      
+      const element = document.getElementById(elementId)
+      if (!element) {
+        throw new Error('Heatmap element not found')
+      }
+      
+      const htmlToImage = await import('html-to-image')
+      const dataUrl = await htmlToImage.toPng(element, {
+        quality: 1.0,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff'
+      })
+      
+      // Create download link
+      const link = document.createElement('a')
+      link.download = filename
+      link.href = dataUrl
+      link.click()
+      
+    } catch (error) {
+      console.error('Error generating image:', error)
+      alert('Failed to generate image. Please try again.')
+    } finally {
+      setShareLoading(false)
+    }
+  }
 
   if (!isAuthenticated) {
     return (
@@ -233,6 +277,48 @@ export function RefreshPanel({ onRefreshComplete }: RefreshPanelProps) {
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
             Refresh Both
           </Button>
+        </div>
+
+        {/* Share Buttons */}
+        <div className="border-t pt-4">
+          <h4 className="font-semibold mb-3 flex items-center gap-2">
+            <Share className="h-4 w-4" />
+            Share Heatmaps
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              onClick={() => shareHeatmap('github')} 
+              disabled={shareLoading}
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              {shareLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              GitHub Heatmap
+            </Button>
+
+            <Button 
+              onClick={() => shareHeatmap('youtube')} 
+              disabled={shareLoading}
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              {shareLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              YouTube Heatmap
+            </Button>
+
+            <Button 
+              onClick={() => shareHeatmap('both')} 
+              disabled={shareLoading}
+              variant="default" 
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              {shareLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Both Heatmaps
+            </Button>
+          </div>
         </div>
 
         {/* Results */}
