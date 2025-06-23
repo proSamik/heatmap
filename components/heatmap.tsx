@@ -235,8 +235,8 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
     return (
       <div 
         className={cn(
-          "bg-gray-900 text-white text-xs p-3 rounded-lg shadow-lg pointer-events-auto z-50",
-          showExpanded ? "max-w-md max-h-80" : "max-w-xs"
+          "bg-gray-900 text-white text-xs p-2 rounded-lg shadow-lg pointer-events-auto z-50",
+          showExpanded ? "max-w-md max-h-80" : "max-w-lg" // Increased width of the tooltip
         )}
         onMouseEnter={handleTooltipMouseEnter}
         onMouseLeave={handleTooltipMouseLeave}
@@ -350,7 +350,7 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
   }
 
   return (
-    <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:border-blue-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 max-w-5xl">
+    <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:border-blue-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 max-w-[70vw]">
       <CardHeader className="pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <CardTitle className="text-lg font-semibold text-gray-900">{title}</CardTitle>
