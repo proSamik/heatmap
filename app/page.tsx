@@ -201,12 +201,12 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.3, duration: 0.8 }}
-              className="space-y-6"
+              className="space-y-6 flex flex-col items-center justify-center" // Center aligned in a column
               id="heatmaps-container"
             >
-              <div id="github-heatmap">
+              <div id="heatmap" className="flex justify-center"> {/* Centering the heatmap */}
                 <Heatmap
-                  data={githubData}
+                  data={githubData} // Keeping only the GitHub heatmap
                   year={showLastYear ? new Date().getFullYear() : selectedYear}
                   platform="github"
                   title={`${githubData.reduce((sum, d) => sum + d.count, 0)} contributions in ${showLastYear ? "the last year" : selectedYear}`}
