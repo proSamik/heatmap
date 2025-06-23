@@ -447,7 +447,7 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
           style={{
             left: `${hoveredDay.x}px`,
             top: `${hoveredDay.y}px`,
-            transform: "translate(-50%, calc(-100% - 8px))", // Position above with gap
+            transform: "translate(-50%, calc(-100% - 2px))", 
             pointerEvents: 'auto',
           }}
         >
