@@ -2,9 +2,9 @@
 
 import type React from "react"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import type { ContributionData } from "@/lib/types"
-import { getWeeksInYear, formatDate, formatDisplayDate } from "@/lib/utils/date"
+import { getWeeksInYear, getWeeksForLast365Days, formatDate, formatDisplayDate } from "@/lib/utils/date"
 import { calculateIntensity, getIntensityColor } from "@/lib/utils/intensity"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,12 +14,13 @@ interface HeatmapProps {
   year: number
   platform: "github" | "youtube"
   title: string
+  showLastYear?: boolean
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-export function Heatmap({ data, year, platform, title }: HeatmapProps) {
+export function Heatmap({ data, year, platform, title, showLastYear = false }: HeatmapProps) {
   const [hoveredDay, setHoveredDay] = useState<{
     date: string
     count: number
@@ -29,8 +30,9 @@ export function Heatmap({ data, year, platform, title }: HeatmapProps) {
   } | null>(null)
   const [tooltipTimeout, setTooltipTimeout] = useState<NodeJS.Timeout | null>(null)
   const [showExpanded, setShowExpanded] = useState(false)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  const { weeks, intensityMap, dataMap } = useMemo(() => {
+  const { weeks, intensityMap, dataMap, monthLabels } = useMemo(() => {
     // Find the last date with data
     const lastDataDate = data.length > 0 
       ? data.reduce((latest, current) => current.date > latest ? current.date : latest, data[0].date)
@@ -42,12 +44,72 @@ export function Heatmap({ data, year, platform, title }: HeatmapProps) {
       String(now.getMonth() + 1).padStart(2, '0') + '-' + 
       String(now.getDate()).padStart(2, '0')
     
-    const weeks = getWeeksInYear(year, lastDataDate || localDateString)
+    const weeks = showLastYear 
+      ? getWeeksForLast365Days()
+      : getWeeksInYear(year, lastDataDate || localDateString)
     const intensityMap = calculateIntensity(data)
     const dataMap = new Map(data.map((d) => [d.date, { count: d.count, details: d.details }]))
 
-    return { weeks, intensityMap, dataMap }
-  }, [data, year])
+    // Calculate month positions based on actual weeks
+    let monthLabels: { month: number, position: number, width: number }[] = []
+    
+    if (showLastYear) {
+      // For last 365 days, calculate month positions based on week distribution
+      const monthWeekCounts = new Map<number, { start: number, count: number, end: number }>()
+      
+      weeks.forEach((week, weekIndex) => {
+        const monthsInWeek = new Set<number>()
+        week.forEach(date => {
+          if (date) {
+            monthsInWeek.add(date.getMonth())
+          }
+        })
+        
+        // For each month in this week, track its span
+        monthsInWeek.forEach(month => {
+          if (!monthWeekCounts.has(month)) {
+            monthWeekCounts.set(month, { start: weekIndex, count: 0, end: weekIndex })
+          }
+          const current = monthWeekCounts.get(month)!
+          current.count++
+          current.end = weekIndex // Update end position
+        })
+      })
+      
+      // Convert to array, sort chronologically, and calculate positions
+      const sortedMonths = Array.from(monthWeekCounts.entries()).sort(([, a], [, b]) => a.start - b.start)
+      
+      monthLabels = sortedMonths.map(([month, data]) => ({
+        month,
+        position: data.start * 16, // 16px per week
+        width: data.count * 16
+      }))
+      
+      // Adjust overlapping months by ensuring minimum spacing
+      for (let i = 1; i < monthLabels.length; i++) {
+        const prev = monthLabels[i - 1]
+        const current = monthLabels[i]
+        const minSpacing = 50 // Minimum pixels between month labels
+        
+        if (current.position < prev.position + minSpacing) {
+          current.position = prev.position + minSpacing
+        }
+      }
+    } else {
+      // For specific years, distribute months evenly across all weeks
+      const monthsToShow = Array.from({ length: 12 }, (_, i) => i)
+      const totalWidth = weeks.length * 16
+      const monthWidth = totalWidth / 12
+      
+      monthLabels = monthsToShow.map((month, index) => ({
+        month,
+        position: index * monthWidth,
+        width: monthWidth
+      }))
+    }
+
+    return { weeks, intensityMap, dataMap, monthLabels }
+  }, [data, year, showLastYear])
 
   const totalContributions = useMemo(() => {
     return data.reduce((sum, d) => sum + d.count, 0)
@@ -79,6 +141,7 @@ export function Heatmap({ data, year, platform, title }: HeatmapProps) {
   }
 
   const handleMouseLeave = () => {
+    // Only start the timeout if we're not hovering over the tooltip
     const timeout = setTimeout(() => {
       setHoveredDay(null)
       setShowExpanded(false) // Reset expanded state when tooltip disappears
@@ -87,6 +150,7 @@ export function Heatmap({ data, year, platform, title }: HeatmapProps) {
   }
 
   const handleTooltipMouseEnter = () => {
+    // Cancel any pending timeout when mouse enters tooltip
     if (tooltipTimeout) {
       clearTimeout(tooltipTimeout)
       setTooltipTimeout(null)
@@ -94,9 +158,71 @@ export function Heatmap({ data, year, platform, title }: HeatmapProps) {
   }
 
   const handleTooltipMouseLeave = () => {
-    setHoveredDay(null)
-    setShowExpanded(false) // Reset expanded state when leaving tooltip
+    // Start a new timeout when leaving tooltip
+    const timeout = setTimeout(() => {
+      setHoveredDay(null)
+      setShowExpanded(false) // Reset expanded state when leaving tooltip
+    }, 300) // Short delay when leaving tooltip
+    setTooltipTimeout(timeout)
   }
+
+  // Auto-scroll to current date on mobile
+  useEffect(() => {
+    const scrollToCurrentDate = () => {
+      if (scrollContainerRef.current) {
+        const container = scrollContainerRef.current
+        // Check if we're on mobile (width < 768px) or if content overflows
+        const isMobile = window.innerWidth < 768
+        const hasOverflow = container.scrollWidth > container.clientWidth
+        
+        if (isMobile || hasOverflow) {
+          // Find the current date or last data date in the weeks
+          const today = formatDate(new Date())
+          const lastDataDate = data.length > 0 
+            ? data.reduce((latest, current) => current.date > latest ? current.date : latest, data[0].date)
+            : today
+          
+          // Calculate the week index that contains the target date
+          let targetWeekIndex = -1
+          const targetDate = lastDataDate > today ? today : lastDataDate
+          
+          for (let weekIndex = 0; weekIndex < weeks.length; weekIndex++) {
+            const week = weeks[weekIndex]
+            for (const date of week) {
+              if (date && formatDate(date) === targetDate) {
+                targetWeekIndex = weekIndex
+                break
+              }
+            }
+            if (targetWeekIndex !== -1) break
+          }
+          
+          if (targetWeekIndex !== -1) {
+            // Calculate scroll position to show the target week
+            const weekWidth = 16 // w-3 (12px) + gap-1 (4px) = 16px per week
+            const targetScrollPosition = Math.max(0, (targetWeekIndex - 10) * weekWidth) // Show target week with some context
+            const maxScroll = container.scrollWidth - container.clientWidth
+            
+            container.scrollLeft = Math.min(targetScrollPosition, maxScroll)
+          } else {
+            // Fallback: scroll to end if current date not found
+            container.scrollLeft = container.scrollWidth - container.clientWidth
+          }
+        }
+      }
+    }
+
+    // Small delay to ensure content is rendered
+    const timer = setTimeout(scrollToCurrentDate, 100)
+    
+    // Also scroll on window resize
+    window.addEventListener('resize', scrollToCurrentDate)
+    
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('resize', scrollToCurrentDate)
+    }
+  }, [weeks, data, monthLabels]) // Re-run when weeks, data, or month labels change
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -125,7 +251,7 @@ export function Heatmap({ data, year, platform, title }: HeatmapProps) {
           {count} {platform === "github" ? "contributions" : "uploads"} on {formatDisplayDate(date)}
         </div>
 
-        {platform === "github" && details?.repos?.length > 0 && (
+        {platform === "github" && details?.repos?.length > 0 && count > 0 && (
           <div>
             <div className="text-gray-300 mb-1">Repositories:</div>
             <div className={cn("space-y-1", showExpanded && "max-h-60 overflow-y-auto pr-2")}>
@@ -164,18 +290,39 @@ export function Heatmap({ data, year, platform, title }: HeatmapProps) {
           </div>
         )}
 
-        {platform === "youtube" && details?.videos?.length > 0 && (
+        {platform === "youtube" && details?.videos?.length > 0 && count > 0 && (
           <div>
             <div className="text-gray-300 mb-1">Videos:</div>
             <div className={cn("space-y-1", showExpanded && "max-h-60 overflow-y-auto pr-2")}>
               {(showExpanded ? details.videos : details.videos.slice(0, 2)).map((video: any, index: number) => (
                 <div 
                   key={index} 
-                  className="text-red-300 cursor-pointer hover:text-red-200 hover:underline break-all" 
-                  title={video.title}
-                  onClick={() => video.url && window.open(video.url, '_blank')}
+                  className="relative group text-red-300 cursor-pointer hover:text-red-200 hover:underline break-all" 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (video.url) {
+                      window.open(video.url, '_blank')
+                    }
+                  }}
                 >
                   {video.title}
+                  
+                  {/* Thumbnail preview on hover */}
+                  {video.thumbnail && (
+                    <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-[99999] bg-gray-900 border border-gray-700 rounded p-2 shadow-lg pointer-events-none">
+                      <img 
+                        src={video.thumbnail} 
+                        alt={video.title}
+                        className="w-32 h-18 object-cover rounded"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                      <div className="text-xs text-gray-300 mt-1 max-w-32 truncate">
+                        {video.title}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
               {!showExpanded && details.videos.length > 2 && (
@@ -221,17 +368,24 @@ export function Heatmap({ data, year, platform, title }: HeatmapProps) {
       <CardContent className="pt-0">
         <div className="relative heatmap-container">
           {/* Scrollable container for mobile */}
-          <div className="overflow-x-auto pb-2">
-            <div className="min-w-[700px]">
+          <div ref={scrollContainerRef} className="overflow-x-auto pb-2">
+            <div style={{ width: `${weeks.length * 16 + 32}px`, minWidth: "700px" }}>
               {/* Month labels */}
-              <div className="flex mb-2 ml-8">
-                {MONTHS.map((month, index) => (
+              <div 
+                className="relative mb-2 ml-8"
+                style={{ width: `${Math.max(weeks.length * 16, monthLabels.length > 0 ? Math.max(...monthLabels.map(m => m.position + 50)) : 0)}px`, height: '16px' }}
+              >
+                {monthLabels.map((monthLabel, index) => (
                   <div
-                    key={month}
-                    className="flex-1 text-xs text-gray-600 text-center first:text-left"
-                    style={{ minWidth: "58px" }}
+                    key={`${monthLabel.month}-${index}`}
+                    className="absolute text-xs text-gray-600 text-center"
+                    style={{ 
+                      left: `${monthLabel.position}px`,
+                      width: `${monthLabel.width}px`,
+                      top: 0
+                    }}
                   >
-                    {month}
+                    {MONTHS[monthLabel.month]}
                   </div>
                 ))}
               </div>
@@ -271,7 +425,7 @@ export function Heatmap({ data, year, platform, title }: HeatmapProps) {
                               boxShadow: hoveredDay?.date === dateStr ? "0 0 10px rgba(59, 130, 246, 0.8)" : undefined
                             }}
                             onMouseEnter={(e) => {
-                              if (date && count > 0) {
+                              if (date) {
                                 handleMouseEnter(e, dateStr, count, details)
                               }
                             }}
