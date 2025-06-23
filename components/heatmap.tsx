@@ -2,13 +2,15 @@
 
 import type React from "react"
 import { useState, useMemo, useEffect, useRef } from "react"
-import { createPortal } from "react-dom" // Add this import
+import { createPortal } from "react-dom" 
 import type { ContributionData } from "@/lib/types"
 import { getWeeksInYear, getWeeksForLast365Days, formatDate, formatDisplayDate } from "@/lib/utils/date"
 import { calculateIntensity, getIntensityColor } from "@/lib/utils/intensity"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BackgroundGradient } from "@/components/ui/background-gradient"
+import { Github, Youtube } from "lucide-react"
+
 
 interface HeatmapProps {
   data: ContributionData[]
@@ -331,8 +333,22 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <CardTitle className="text-lg font-semibold text-gray-900">{title}</CardTitle>
-            <div className="text-sm text-gray-700">
-              {totalContributions} {platform === "github" ? "contributions" : "uploads"} in {year}
+            <div className="flex items-center text-sm text-gray-700">
+              {platform === "github" ? (
+                <>
+                  <a href="https://github.com/prosamik" target="_blank" rel="noopener noreferrer" className="flex items-center">
+                    <Github className="h-4 w-4 mr-1" />
+                    prosamik
+                  </a>
+                </>
+              ) : (
+                <>
+                  <a href="https://youtube.com/@prosamik" target="_blank" rel="noopener noreferrer" className="flex items-center">
+                    <Youtube className="h-4 w-4 mr-1" />
+                    prosamik
+                  </a>
+                </>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -409,7 +425,6 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 text-xs text-gray-600 gap-2">
-              <span>Learn how we count {platform === "github" ? "contributions" : "uploads"}</span>
               <div className="flex items-center gap-1">
                 <span>Less</span>
                 {[0, 1, 2, 3, 4].map((level) => (
