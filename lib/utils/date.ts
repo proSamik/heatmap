@@ -1,20 +1,27 @@
 export function formatDate(date: Date): string {
-  return date.toISOString().split("T")[0]
+  // Use local date components instead of UTC to respect user's timezone
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 /**
  * Format date for display in tooltips (e.g., "21st June 25")
  */
 export function formatDisplayDate(date: string): string {
-  const d = new Date(date)
-  const day = d.getDate()
-  const month = d.toLocaleDateString('en-US', { month: 'long' })
-  const year = d.getFullYear().toString().slice(-2)
+  // Parse date string and create date in local timezone
+  const [year, month, day] = date.split('-').map(Number)
+  const d = new Date(year, month - 1, day) // Create date in local timezone
+  
+  const dayNum = d.getDate()
+  const monthName = d.toLocaleDateString('en-US', { month: 'long' })
+  const yearShort = d.getFullYear().toString().slice(-2)
   
   // Add ordinal suffix
-  const ordinal = getOrdinalSuffix(day)
+  const ordinal = getOrdinalSuffix(dayNum)
   
-  return `${day}${ordinal} ${month} ${year}`
+  return `${dayNum}${ordinal} ${monthName} ${yearShort}`
 }
 
 function getOrdinalSuffix(day: number): string {
@@ -59,36 +66,60 @@ export function getYearRange(year: number): { start: string; end: string } {
   }
 }
 
-export function getWeeksInYear(year: number): Date[][] {
-  const weeks: Date[][] = []
-  const startDate = new Date(year, 0, 1)
-  const endDate = new Date(year, 11, 31)
+export function getWeeksInYear(year: number, lastDataDate?: string): (Date | null)[][] {
+  const weeks: (Date | null)[][] = []
+  const startDate = new Date(year, 0, 1) // Use local timezone
+  const endDate = new Date(year, 11, 31) // Use local timezone
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   
-  // Use today's date if it's in the current year, otherwise use the end of the year
-  const actualEndDate = year === today.getFullYear() ? today : endDate
+  // Determine the actual end date based on priority:
+  // 1. Last data date if provided
+  // 2. Today's date if in current year
+  // 3. End of year for past years
+  let actualEndDate = endDate
+  if (lastDataDate) {
+    // Parse the date string in local timezone
+    const [y, m, d] = lastDataDate.split('-').map(Number)
+    const lastDate = new Date(y, m - 1, d)
+    lastDate.setHours(0, 0, 0, 0)
+    actualEndDate = lastDate
+  } else if (year === today.getFullYear()) {
+    actualEndDate = today
+  }
 
-  // Find the first Sunday of the year or the year start
+  // Find the first Sunday of the year or before year start
   const firstDay = new Date(startDate)
-  while (firstDay.getDay() !== 0 && firstDay < actualEndDate) {
+  while (firstDay.getDay() !== 0) {
     firstDay.setDate(firstDay.getDate() - 1)
   }
 
-  let currentWeek: Date[] = []
+  let currentWeek: (Date | null)[] = []
   const currentDate = new Date(firstDay)
 
-  while (currentDate <= actualEndDate) {
+  // Continue until we have enough weeks to cover the data
+  const weeksNeeded = Math.ceil((actualEndDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 4
+  let weekCount = 0
+
+  while (weekCount < weeksNeeded) {
     if (currentDate.getDay() === 0 && currentWeek.length > 0) {
       weeks.push([...currentWeek])
       currentWeek = []
+      weekCount++
     }
 
-    if (currentDate.getFullYear() === year) {
+    if (currentDate.getFullYear() === year && currentDate <= actualEndDate) {
       currentWeek.push(new Date(currentDate))
+    } else if (currentDate.getFullYear() === year || currentWeek.length > 0) {
+      currentWeek.push(null) // Empty cell for dates outside range
     }
 
     currentDate.setDate(currentDate.getDate() + 1)
+    
+    // Break if we've gone too far past the actual end date
+    if (currentDate > new Date(actualEndDate.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+      break
+    }
   }
 
   if (currentWeek.length > 0) {
