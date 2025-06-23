@@ -33,7 +33,7 @@ export function YearSelector({
   }
   
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-2">
       <div className="flex flex-wrap items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
