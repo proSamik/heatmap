@@ -326,7 +326,7 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
   }
 
   return (
-    <BackgroundGradient className="rounded-[22px] p-1" containerClassName="max-w-[60vw]">
+    <BackgroundGradient className="rounded-[22px] p-1" containerClassName="max-w-[80vw]">
       <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-none rounded-[20px] overflow-hidden">
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
