@@ -23,7 +23,7 @@ export function AuroraWrapper({ children }: AuroraWrapperProps) {
           duration: 0.8,
           ease: "easeInOut",
         }}
-        className="relative flex flex-col items-center justify-start w-full min-h-screen px-4"
+        className="relative flex flex-col items-center justify-start w-full min-h-screen px-4 overflow-hidden scrollbar-hidden"
       >
         {children}
       </motion.div>
