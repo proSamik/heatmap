@@ -2,6 +2,33 @@ export function formatDate(date: Date): string {
   return date.toISOString().split("T")[0]
 }
 
+/**
+ * Format date for display in tooltips (e.g., "21st June 25")
+ */
+export function formatDisplayDate(date: string): string {
+  const d = new Date(date)
+  const day = d.getDate()
+  const month = d.toLocaleDateString('en-US', { month: 'long' })
+  const year = d.getFullYear().toString().slice(-2)
+  
+  // Add ordinal suffix
+  const ordinal = getOrdinalSuffix(day)
+  
+  return `${day}${ordinal} ${month} ${year}`
+}
+
+function getOrdinalSuffix(day: number): string {
+  if (day >= 11 && day <= 13) {
+    return 'th'
+  }
+  switch (day % 10) {
+    case 1: return 'st'
+    case 2: return 'nd'
+    case 3: return 'rd'
+    default: return 'th'
+  }
+}
+
 export function getDateRange(startDate: string, endDate: string): string[] {
   const dates: string[] = []
   const start = new Date(startDate)
@@ -36,17 +63,22 @@ export function getWeeksInYear(year: number): Date[][] {
   const weeks: Date[][] = []
   const startDate = new Date(year, 0, 1)
   const endDate = new Date(year, 11, 31)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  // Use today's date if it's in the current year, otherwise use the end of the year
+  const actualEndDate = year === today.getFullYear() ? today : endDate
 
   // Find the first Sunday of the year or the year start
   const firstDay = new Date(startDate)
-  while (firstDay.getDay() !== 0 && firstDay < endDate) {
+  while (firstDay.getDay() !== 0 && firstDay < actualEndDate) {
     firstDay.setDate(firstDay.getDate() - 1)
   }
 
   let currentWeek: Date[] = []
   const currentDate = new Date(firstDay)
 
-  while (currentDate <= endDate) {
+  while (currentDate <= actualEndDate) {
     if (currentDate.getDay() === 0 && currentWeek.length > 0) {
       weeks.push([...currentWeek])
       currentWeek = []
