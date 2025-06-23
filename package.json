@@ -66,6 +66,7 @@
     "expo-sqlite": "latest",
     "framer-motion": "^12.19.1",
     "gel": "latest",
+    "html-to-image": "^1.11.13",
     "input-otp": "1.4.1",
     "knex": "latest",
     "kysely": "latest",
