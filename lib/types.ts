@@ -1,6 +1,7 @@
 export interface ContributionData {
   date: string
   count: number
+  details?: any
 }
 
 export interface HeatmapData {
