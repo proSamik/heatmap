@@ -1,13 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
 import { Heatmap } from "@/components/heatmap"
 import { MetricsCard } from "@/components/metrics-card"
 import { YearSelector } from "@/components/year-selector"
 import { RefreshPanel } from "@/components/refresh-panel"
+import { AuroraBackground } from "@/components/ui/aurora-background"
 import type { ContributionData, MetricsData } from "@/lib/types"
 import { calculateStreak } from "@/lib/utils/streak"
-import { getLastYearRange, getYearRange } from "@/lib/utils/date"
+import { getLastYearRange, getYearRange, formatDate } from "@/lib/utils/date"
 import { Loader2 } from "lucide-react"
 
 export default function HomePage() {
@@ -21,14 +23,21 @@ export default function HomePage() {
 
   const availableYears = Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).reverse()
 
-  const fetchData = async (startDate: string, endDate: string) => {
+  const fetchData = async (startDate: string, endDate: string, autoRefresh = false) => {
     setLoading(true)
     setError(null)
 
     try {
+      // Build URLs with auto-refresh logic
+      const today = formatDate(new Date())
+      const shouldAutoRefresh = autoRefresh && endDate >= today
+      
+      const githubUrl = `/api/github?startDate=${startDate}&endDate=${endDate}${shouldAutoRefresh ? '&refresh=true' : ''}`
+      const youtubeUrl = `/api/youtube?startDate=${startDate}&endDate=${endDate}${shouldAutoRefresh ? '&refresh=true' : ''}`
+
       const [githubResponse, youtubeResponse] = await Promise.all([
-        fetch(`/api/github?startDate=${startDate}&endDate=${endDate}`),
-        fetch(`/api/youtube?startDate=${startDate}&endDate=${endDate}`),
+        fetch(githubUrl),
+        fetch(youtubeUrl),
       ])
 
       if (!githubResponse.ok || !youtubeResponse.ok) {
@@ -46,9 +55,44 @@ export default function HomePage() {
     }
   }
 
+  const checkAndRefreshRecentData = async () => {
+    try {
+      const today = new Date()
+      const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const startDate = formatDate(sevenDaysAgo)
+      const endDate = formatDate(today)
+
+      // Check if we need to refresh recent data (last 7 days including today)
+      const refreshUrl = `/api/github?startDate=${startDate}&endDate=${endDate}&refresh=true`
+      const youtubeRefreshUrl = `/api/youtube?startDate=${startDate}&endDate=${endDate}&refresh=true`
+
+      await Promise.all([
+        fetch(refreshUrl),
+        fetch(youtubeRefreshUrl)
+      ])
+
+      console.log('Auto-refreshed recent data (last 7 days)')
+    } catch (error) {
+      console.log('Auto-refresh failed:', error)
+    }
+  }
+
   useEffect(() => {
     const dateRange = showLastYear ? getLastYearRange() : getYearRange(selectedYear)
+    
+    // First load: fetch data normally
     fetchData(dateRange.start, dateRange.end)
+    
+    // Auto-refresh recent data in the background
+    if (showLastYear || selectedYear === new Date().getFullYear()) {
+      // Small delay to ensure initial load completes first
+      setTimeout(() => {
+        checkAndRefreshRecentData().then(() => {
+          // Refresh the display data after auto-refresh
+          fetchData(dateRange.start, dateRange.end)
+        })
+      }, 1000)
+    }
   }, [selectedYear, showLastYear, refreshKey])
 
   const handleRefreshComplete = () => {
@@ -68,67 +112,124 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading your habit data...</span>
-        </div>
-      </div>
+      <AuroraBackground>
+        <motion.div
+          initial={{ opacity: 0.0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
+          className="relative flex flex-col gap-4 items-center justify-center px-4"
+        >
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-6 w-6 animate-spin text-gray-900" />
+            <span className="text-gray-900">Loading your habit data...</span>
+          </div>
+        </motion.div>
+      </AuroraBackground>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-2">Error</h1>
-          <p className="text-gray-600">{error}</p>
-        </div>
-      </div>
+      <AuroraBackground>
+        <motion.div
+          initial={{ opacity: 0.0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
+          className="relative flex flex-col gap-4 items-center justify-center px-4"
+        >
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-2">Error</h1>
+            <p className="text-gray-900">{error}</p>
+          </div>
+        </motion.div>
+      </AuroraBackground>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <header className="mb-8">
-            <h1 className="text-3xl font-bold mb-2 text-gray-900">Samik&apos;s Heatmap of Contribution</h1>
-            <p className="text-gray-600">Track your GitHub contributions and YouTube uploads in one place</p>
-          </header>
+    <AuroraBackground>
+      <motion.div
+        initial={{ opacity: 0.0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
+        className="relative w-full min-h-screen overflow-auto"
+      >
+        <div className="container mx-auto px-4 py-8 w-full">
+          <div className="max-w-7xl mx-auto space-y-8">
+            <header className="text-center">
+              <motion.h1 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                className="text-3xl md:text-5xl font-bold mb-4 text-gray-900"
+              >
+                Samik&apos;s Heatmap of Contribution
+              </motion.h1>
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7, duration: 0.8 }}
+                className="text-gray-700 text-sm md:text-base mb-8"
+              >
+                Track your GitHub contributions and YouTube uploads in one place
+              </motion.p>
+            </header>
 
-          <MetricsCard data={metricsData} />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9, duration: 0.8 }}
+            >
+              <MetricsCard data={metricsData} />
+            </motion.div>
 
-          <div className="space-y-8">
-            <YearSelector
-              selectedYear={selectedYear}
-              availableYears={availableYears}
-              onYearChange={setSelectedYear}
-              showLastYear={showLastYear}
-              onToggleLastYear={() => setShowLastYear(!showLastYear)}
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.1, duration: 0.8 }}
+            >
+              <YearSelector
+                selectedYear={selectedYear}
+                availableYears={availableYears}
+                onYearChange={setSelectedYear}
+                showLastYear={showLastYear}
+                onToggleLastYear={() => setShowLastYear(!showLastYear)}
+              />
+            </motion.div>
 
-            <Heatmap
-              data={githubData}
-              year={showLastYear ? new Date().getFullYear() : selectedYear}
-              platform="github"
-              title={`${githubData.reduce((sum, d) => sum + d.count, 0)} contributions in ${showLastYear ? "the last year" : selectedYear}`}
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.3, duration: 0.8 }}
+              className="space-y-6"
+            >
+              <Heatmap
+                data={githubData}
+                year={showLastYear ? new Date().getFullYear() : selectedYear}
+                platform="github"
+                title={`${githubData.reduce((sum, d) => sum + d.count, 0)} contributions in ${showLastYear ? "the last year" : selectedYear}`}
+              />
 
-            <Heatmap
-              data={youtubeData}
-              year={showLastYear ? new Date().getFullYear() : selectedYear}
-              platform="youtube"
-              title={`${youtubeData.reduce((sum, d) => sum + d.count, 0)} uploads in ${showLastYear ? "the last year" : selectedYear}`}
-            />
-          </div>
+              <Heatmap
+                data={youtubeData}
+                year={showLastYear ? new Date().getFullYear() : selectedYear}
+                platform="youtube"
+                title={`${youtubeData.reduce((sum, d) => sum + d.count, 0)} uploads in ${showLastYear ? "the last year" : selectedYear}`}
+              />
+            </motion.div>
 
-          {/* Refresh Panel at Bottom */}
-          <div className="mt-12">
-            <RefreshPanel onRefreshComplete={handleRefreshComplete} />
+            {/* Refresh Panel at Bottom */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5, duration: 0.8 }}
+              className="pb-8"
+            >
+              <RefreshPanel onRefreshComplete={handleRefreshComplete} />
+            </motion.div>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </AuroraBackground>
   )
 }
