@@ -148,19 +148,8 @@ export default function HomePage() {
       transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
       className="relative w-full min-h-screen overflow-auto"
     >
-      <div className="container mx-auto px-4 py-8 w-full">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <header className="text-center">
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="text-3xl md:text-5xl font-bold mb-4 text-gray-900"
-            >
-              Samik&apos;s Heatmap of Contribution
-            </motion.h1>
-          </header>
-
+      <div className="container mx-auto px-4 pt-2 w-full">
+        <div className="max-w-7xl mx-auto space-y-2">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -213,6 +202,17 @@ export default function HomePage() {
 
           {/* Large spacing before admin panel */}
           <div className="h-32"></div>
+
+          <header className="text-center">
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="text-3xl md:text-5xl font-bold mb-4 text-gray-900"
+            >
+              Samik&apos;s Heatmap of Contribution to the world
+            </motion.h1>
+          </header>
 
           {/* Admin Panel at Very Bottom */}
           <motion.div
