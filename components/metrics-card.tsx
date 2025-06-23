@@ -11,7 +11,7 @@ interface MetricsCardProps {
 
 export function MetricsCard({ data }: MetricsCardProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-2">
       {/* GitHub Metrics */}
       <CardContainer className="inter-var" containerClassName="py-4">
         <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-full h-auto rounded-xl p-6 border">
