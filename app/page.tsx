@@ -6,7 +6,6 @@ import { Heatmap } from "@/components/heatmap"
 import { MetricsCard } from "@/components/metrics-card"
 import { YearSelector } from "@/components/year-selector"
 import { RefreshPanel } from "@/components/refresh-panel"
-import { AuroraBackground } from "@/components/ui/aurora-background"
 import type { ContributionData, MetricsData } from "@/lib/types"
 import { calculateStreak } from "@/lib/utils/streak"
 import { getLast365DaysRange, getYearRange, formatDate } from "@/lib/utils/date"
@@ -112,134 +111,120 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <AuroraBackground>
-        <motion.div
-          initial={{ opacity: 0.0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
-          className="relative flex flex-col gap-4 items-center justify-center px-4"
-        >
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-900" />
-            <span className="text-gray-900">Loading your habit data...</span>
-          </div>
-        </motion.div>
-      </AuroraBackground>
+      <motion.div
+        initial={{ opacity: 0.0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
+        className="relative flex flex-col gap-4 items-center justify-center px-4"
+      >
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin text-gray-900" />
+          <span className="text-gray-900">Loading your habit data...</span>
+        </div>
+      </motion.div>
     )
   }
 
   if (error) {
     return (
-      <AuroraBackground>
-        <motion.div
-          initial={{ opacity: 0.0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
-          className="relative flex flex-col gap-4 items-center justify-center px-4"
-        >
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-2">Error</h1>
-            <p className="text-gray-900">{error}</p>
-          </div>
-        </motion.div>
-      </AuroraBackground>
-    )
-  }
-
-  return (
-    <AuroraBackground>
       <motion.div
         initial={{ opacity: 0.0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
-        className="relative w-full min-h-screen overflow-auto"
+        className="relative flex flex-col gap-4 items-center justify-center px-4"
       >
-        <div className="container mx-auto px-4 py-8 w-full">
-          <div className="max-w-7xl mx-auto space-y-8">
-            <header className="text-center">
-              <motion.h1 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.8 }}
-                className="text-3xl md:text-5xl font-bold mb-4 text-gray-900"
-              >
-                Samik&apos;s Heatmap of Contribution
-              </motion.h1>
-              <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7, duration: 0.8 }}
-                className="text-gray-700 text-sm md:text-base mb-8"
-              >
-                Track your GitHub contributions and YouTube uploads in one place
-              </motion.p>
-            </header>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9, duration: 0.8 }}
-            >
-              <MetricsCard data={metricsData} />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1, duration: 0.8 }}
-            >
-              <YearSelector
-                selectedYear={selectedYear}
-                availableYears={availableYears}
-                onYearChange={setSelectedYear}
-                showLastYear={showLastYear}
-                onToggleLastYear={() => setShowLastYear(!showLastYear)}
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.3, duration: 0.8 }}
-              className="space-y-6 flex flex-col items-center justify-center" // Center aligned in a column
-              id="heatmaps-container"
-            >
-              <div id="heatmap" className="flex justify-center"> {/* Centering the heatmap */}
-                <Heatmap
-                  data={githubData} // Keeping only the GitHub heatmap
-                  year={showLastYear ? new Date().getFullYear() : selectedYear}
-                  platform="github"
-                  title={`${githubData.reduce((sum, d) => sum + d.count, 0)} contributions in ${showLastYear ? "the last year" : selectedYear}`}
-                  showLastYear={showLastYear}
-                />
-              </div>
-
-              <div id="youtube-heatmap">
-                <Heatmap
-                  data={youtubeData}
-                  year={showLastYear ? new Date().getFullYear() : selectedYear}
-                  platform="youtube"
-                  title={`${youtubeData.reduce((sum, d) => sum + d.count, 0)} uploads in ${showLastYear ? "the last year" : selectedYear}`}
-                  showLastYear={showLastYear}
-                />
-              </div>
-            </motion.div>
-
-            {/* Large spacing before admin panel */}
-            <div className="h-32"></div>
-
-            {/* Admin Panel at Very Bottom */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.5, duration: 0.8 }}
-              className="pb-8 pt-16"
-            >
-              <RefreshPanel onRefreshComplete={handleRefreshComplete} />
-            </motion.div>
-          </div>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-2">Error</h1>
+          <p className="text-gray-900">{error}</p>
         </div>
       </motion.div>
-    </AuroraBackground>
+    )
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0.0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
+      className="relative w-full min-h-screen overflow-auto"
+    >
+      <div className="container mx-auto px-4 py-8 w-full">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <header className="text-center">
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="text-3xl md:text-5xl font-bold mb-4 text-gray-900"
+            >
+              Samik&apos;s Heatmap of Contribution
+            </motion.h1>
+          </header>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, duration: 0.8 }}
+          >
+            <MetricsCard data={metricsData} />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.1, duration: 0.8 }}
+          >
+            <YearSelector
+              selectedYear={selectedYear}
+              availableYears={availableYears}
+              onYearChange={setSelectedYear}
+              showLastYear={showLastYear}
+              onToggleLastYear={() => setShowLastYear(!showLastYear)}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.3, duration: 0.8 }}
+            className="space-y-6 flex flex-col items-center justify-center" // Center aligned in a column
+            id="heatmaps-container"
+          >
+            <div id="heatmap" className="flex justify-center"> {/* Centering the heatmap */}
+              <Heatmap
+                data={githubData} // Keeping only the GitHub heatmap
+                year={showLastYear ? new Date().getFullYear() : selectedYear}
+                platform="github"
+                title={`${githubData.reduce((sum, d) => sum + d.count, 0)} contributions in ${showLastYear ? "the last year" : selectedYear}`}
+                showLastYear={showLastYear}
+              />
+            </div>
+
+            <div id="youtube-heatmap">
+              <Heatmap
+                data={youtubeData}
+                year={showLastYear ? new Date().getFullYear() : selectedYear}
+                platform="youtube"
+                title={`${youtubeData.reduce((sum, d) => sum + d.count, 0)} uploads in ${showLastYear ? "the last year" : selectedYear}`}
+                showLastYear={showLastYear}
+              />
+            </div>
+          </motion.div>
+
+          {/* Large spacing before admin panel */}
+          <div className="h-32"></div>
+
+          {/* Admin Panel at Very Bottom */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.5, duration: 0.8 }}
+            className="pb-8 pt-16"
+          >
+            <RefreshPanel onRefreshComplete={handleRefreshComplete} />
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
   )
 }
