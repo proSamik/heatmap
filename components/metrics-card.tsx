@@ -2,6 +2,7 @@
 
 import type { MetricsData } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CardBody, CardContainer, CardItem } from "@/components/ui/3d-card"
 
 interface MetricsCardProps {
   data: MetricsData
@@ -9,25 +10,29 @@ interface MetricsCardProps {
 
 export function MetricsCard({ data }: MetricsCardProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       {/* GitHub Metrics */}
-      <Card className="bg-white border-gray-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-center text-lg text-gray-900">GitHub Development Metrics</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <CardContainer className="inter-var" containerClassName="py-4">
+        <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-full h-auto rounded-xl p-6 border">
+          <CardItem
+            translateZ="50"
+            className="text-lg font-bold text-neutral-600 dark:text-white text-center mb-4"
+          >
+            GitHub Development Metrics
+          </CardItem>
+          
           <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-gray-900">{data.github.total.toLocaleString()}</div>
-              <div className="text-sm text-gray-600">Total Contributions</div>
-              <div className="text-xs text-gray-500 mt-1">
+            <CardItem translateZ="60" className="flex flex-col items-center">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{data.github.total.toLocaleString()}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Total Contributions</div>
+              <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 {data.github.streak.longestStart && data.github.streak.longestEnd
                   ? `${data.github.streak.longestStart} - ${data.github.streak.longestEnd}`
                   : "No data"}
               </div>
-            </div>
+            </CardItem>
 
-            <div className="relative">
+            <CardItem translateZ="80" className="relative flex flex-col items-center">
               <div className="w-20 h-20 mx-auto mb-2 relative">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                   <path
@@ -51,44 +56,48 @@ export function MetricsCard({ data }: MetricsCardProps) {
                 </div>
               </div>
               <div className="text-sm text-orange-500 font-semibold">Current Streak</div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 {data.github.streak.currentStart && data.github.streak.currentEnd
                   ? `${data.github.streak.currentStart} - ${data.github.streak.currentEnd}`
                   : "No active streak"}
               </div>
-            </div>
+            </CardItem>
 
-            <div>
-              <div className="text-2xl font-bold text-gray-900">{data.github.streak.longest}</div>
-              <div className="text-sm text-gray-600">Longest Streak</div>
-              <div className="text-xs text-gray-500 mt-1">
+            <CardItem translateZ="60" className="flex flex-col items-center">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{data.github.streak.longest}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Longest Streak</div>
+              <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 {data.github.streak.longestStart && data.github.streak.longestEnd
                   ? `${data.github.streak.longestStart} - ${data.github.streak.longestEnd}`
                   : "No data"}
               </div>
-            </div>
+            </CardItem>
           </div>
-        </CardContent>
-      </Card>
+        </CardBody>
+      </CardContainer>
 
       {/* YouTube Metrics */}
-      <Card className="bg-white border-gray-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-center text-lg text-gray-900">YouTube Content Metrics</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <CardContainer className="inter-var" containerClassName="py-4">
+        <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-red-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-full h-auto rounded-xl p-6 border">
+          <CardItem
+            translateZ="50"
+            className="text-lg font-bold text-neutral-600 dark:text-white text-center mb-4"
+          >
+            YouTube Content Metrics
+          </CardItem>
+          
           <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-gray-900">{data.youtube.total.toLocaleString()}</div>
-              <div className="text-sm text-gray-600">Total Uploads</div>
-              <div className="text-xs text-gray-500 mt-1">
+            <CardItem translateZ="60" className="flex flex-col items-center">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{data.youtube.total.toLocaleString()}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Total Uploads</div>
+              <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 {data.youtube.streak.longestStart && data.youtube.streak.longestEnd
                   ? `${data.youtube.streak.longestStart} - ${data.youtube.streak.longestEnd}`
                   : "No data"}
               </div>
-            </div>
+            </CardItem>
 
-            <div className="relative">
+            <CardItem translateZ="80" className="relative flex flex-col items-center">
               <div className="w-20 h-20 mx-auto mb-2 relative">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                   <path
@@ -112,25 +121,25 @@ export function MetricsCard({ data }: MetricsCardProps) {
                 </div>
               </div>
               <div className="text-sm text-red-500 font-semibold">Current Streak</div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 {data.youtube.streak.currentStart && data.youtube.streak.currentEnd
                   ? `${data.youtube.streak.currentStart} - ${data.youtube.streak.currentEnd}`
                   : "No active streak"}
               </div>
-            </div>
+            </CardItem>
 
-            <div>
-              <div className="text-2xl font-bold text-gray-900">{data.youtube.streak.longest}</div>
-              <div className="text-sm text-gray-600">Longest Streak</div>
-              <div className="text-xs text-gray-500 mt-1">
+            <CardItem translateZ="60" className="flex flex-col items-center">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{data.youtube.streak.longest}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Longest Streak</div>
+              <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 {data.youtube.streak.longestStart && data.youtube.streak.longestEnd
                   ? `${data.youtube.streak.longestStart} - ${data.youtube.streak.longestEnd}`
                   : "No data"}
               </div>
-            </div>
+            </CardItem>
           </div>
-        </CardContent>
-      </Card>
+        </CardBody>
+      </CardContainer>
     </div>
   )
 }
