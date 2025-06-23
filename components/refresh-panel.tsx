@@ -132,8 +132,8 @@ export function RefreshPanel({ onRefreshComplete }: RefreshPanelProps) {
         throw new Error('Heatmap element not found')
       }
       
-      const htmlToImage = await import('html-to-image')
-      const dataUrl = await htmlToImage.toPng(element, {
+      const { toPng } = await import('html-to-image')
+      const dataUrl = await toPng(element, {
         quality: 1.0,
         pixelRatio: 2,
         backgroundColor: '#ffffff'

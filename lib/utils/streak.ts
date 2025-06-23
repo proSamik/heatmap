@@ -1,4 +1,5 @@
 import type { ContributionData, StreakData } from "../types"
+import { formatDate } from "./date"
 
 export function calculateStreak(data: ContributionData[]): StreakData {
   if (!data.length) {
@@ -47,7 +48,7 @@ export function calculateStreak(data: ContributionData[]): StreakData {
 
   // Determine current active streak
   // Work backwards from today to find the current streak
-  const todayStr = today.toISOString().split("T")[0]
+  const todayStr = formatDate(today)
   const checkDate = new Date(today)
   let foundToday = false
 
@@ -63,7 +64,7 @@ export function calculateStreak(data: ContributionData[]): StreakData {
   // If today doesn't have contributions, check yesterday
   if (!foundToday) {
     checkDate.setDate(checkDate.getDate() - 1)
-    const yesterdayStr = checkDate.toISOString().split("T")[0]
+    const yesterdayStr = formatDate(checkDate)
     const yesterdayData = sortedData.find((d) => d.date === yesterdayStr)
 
     if (yesterdayData && yesterdayData.count > 0) {
@@ -79,7 +80,7 @@ export function calculateStreak(data: ContributionData[]): StreakData {
   // Continue backwards to build the current streak
   if (currentStreak > 0) {
     while (checkDate >= new Date(sortedData[0].date)) {
-      const checkDateStr = checkDate.toISOString().split("T")[0]
+      const checkDateStr = formatDate(checkDate)
       const dayData = sortedData.find((d) => d.date === checkDateStr)
 
       if (dayData && dayData.count > 0) {

@@ -3,6 +3,7 @@
 import type { MetricsData } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CardBody, CardContainer, CardItem } from "@/components/ui/3d-card"
+import { Button } from "@/components/ui/moving-border"
 
 interface MetricsCardProps {
   data: MetricsData
@@ -13,7 +14,14 @@ export function MetricsCard({ data }: MetricsCardProps) {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       {/* GitHub Metrics */}
       <CardContainer className="inter-var" containerClassName="py-4">
-        <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-full h-auto rounded-xl p-6 border">
+        <Button
+          borderRadius="1.75rem"
+          as="div"
+          className="bg-white/95 backdrop-blur-sm text-gray-900 border-0 w-full h-auto p-6"
+          containerClassName="w-full h-auto"
+          borderClassName="bg-[radial-gradient(#22c55e_40%,transparent_60%)]"
+        >
+        <CardBody className="bg-transparent relative group/card w-auto sm:w-full h-auto border-0 p-0">
           <CardItem
             translateZ="50"
             className="text-lg font-bold text-neutral-600 dark:text-white text-center mb-4"
@@ -74,11 +82,19 @@ export function MetricsCard({ data }: MetricsCardProps) {
             </CardItem>
           </div>
         </CardBody>
+        </Button>
       </CardContainer>
 
       {/* YouTube Metrics */}
       <CardContainer className="inter-var" containerClassName="py-4">
-        <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-red-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-full h-auto rounded-xl p-6 border">
+        <Button
+          borderRadius="1.75rem"
+          as="div"
+          className="bg-white/95 backdrop-blur-sm text-gray-900 border-0 w-full h-auto p-6"
+          containerClassName="w-full h-auto"
+          borderClassName="bg-[radial-gradient(#ef4444_40%,transparent_60%)]"
+        >
+        <CardBody className="bg-transparent relative group/card w-auto sm:w-full h-auto border-0 p-0">
           <CardItem
             translateZ="50"
             className="text-lg font-bold text-neutral-600 dark:text-white text-center mb-4"
@@ -139,6 +155,7 @@ export function MetricsCard({ data }: MetricsCardProps) {
             </CardItem>
           </div>
         </CardBody>
+        </Button>
       </CardContainer>
     </div>
   )

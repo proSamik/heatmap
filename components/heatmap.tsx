@@ -8,6 +8,7 @@ import { getWeeksInYear, getWeeksForLast365Days, formatDate, formatDisplayDate }
 import { calculateIntensity, getIntensityColor } from "@/lib/utils/intensity"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { BackgroundGradient } from "@/components/ui/background-gradient"
 
 interface HeatmapProps {
   data: ContributionData[]
@@ -350,15 +351,16 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
   }
 
   return (
-    <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:border-blue-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 max-w-[70vw]">
-      <CardHeader className="pb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <CardTitle className="text-lg font-semibold text-gray-900">{title}</CardTitle>
-          <div className="text-sm text-gray-700">
-            {totalContributions} {platform === "github" ? "contributions" : "uploads"} in {year}
+    <BackgroundGradient className="rounded-[22px] p-1" containerClassName="max-w-[70vw]">
+      <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-none rounded-[20px] overflow-hidden">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <CardTitle className="text-lg font-semibold text-gray-900">{title}</CardTitle>
+            <div className="text-sm text-gray-700">
+              {totalContributions} {platform === "github" ? "contributions" : "uploads"} in {year}
+            </div>
           </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
       
       <CardContent className="pt-0">
         <div className="relative heatmap-container">
@@ -466,6 +468,7 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
           )}
         </div>
       </CardContent>
-    </Card>
+      </Card>
+    </BackgroundGradient>
   )
 }
