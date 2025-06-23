@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { ChevronDown } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { HoverBorderGradient } from "@/components/ui/hover-border-gradient"
 
 interface YearSelectorProps {
   selectedYear: number
@@ -20,22 +21,31 @@ export function YearSelector({
   onToggleLastYear,
 }: YearSelectorProps) {
   return (
-    <div className="flex items-center gap-4 mb-6">
-      <div className="flex items-center gap-2">
-        <Button
-          variant={showLastYear ? "default" : "outline"}
+    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+      <div className="flex flex-wrap items-center gap-2">
+        <HoverBorderGradient
+          containerClassName="rounded-full"
+          as="button"
+          className={`dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2 ${
+            showLastYear ? "bg-blue-600 text-white" : ""
+          }`}
           onClick={onToggleLastYear}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
         >
-          Last Year
-        </Button>
+          <span>Last Year</span>
+        </HoverBorderGradient>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="flex items-center gap-2">
-              {selectedYear}
-              <ChevronDown className="h-4 w-4" />
-            </Button>
+            <div>
+              <HoverBorderGradient
+                containerClassName="rounded-full"
+                as="button"
+                className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2"
+              >
+                <span>{selectedYear}</span>
+                <ChevronDown className="h-4 w-4" />
+              </HoverBorderGradient>
+            </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="max-h-60 overflow-y-auto">
             {availableYears.map((year) => (
@@ -51,7 +61,7 @@ export function YearSelector({
         </DropdownMenu>
       </div>
 
-      <div className="text-sm text-muted-foreground">Contribution settings</div>
+      <div className="text-sm text-gray-600">Contribution settings</div>
     </div>
   )
 }
