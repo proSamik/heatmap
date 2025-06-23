@@ -47,6 +47,7 @@
     "@radix-ui/react-toggle": "1.1.1",
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
+    "@tabler/icons-react": "^3.34.0",
     "@tidbcloud/serverless": "latest",
     "@types/better-sqlite3": "latest",
     "@types/pg": "latest",
