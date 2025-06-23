@@ -20,20 +20,21 @@ export function YearSelector({
   showLastYear,
   onToggleLastYear,
 }: YearSelectorProps) {
+  const currentSelection = showLastYear ? "Last Year" : selectedYear.toString()
+  
+  const handleSelection = (value: string) => {
+    if (value === "Last Year") {
+      if (!showLastYear) onToggleLastYear()
+    } else {
+      const year = parseInt(value)
+      if (showLastYear) onToggleLastYear()
+      onYearChange(year)
+    }
+  }
+  
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
       <div className="flex flex-wrap items-center gap-2">
-        <HoverBorderGradient
-          containerClassName="rounded-full"
-          as="button"
-          className={`dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2 ${
-            showLastYear ? "bg-blue-600 text-white" : ""
-          }`}
-          onClick={onToggleLastYear}
-        >
-          <span>Last Year</span>
-        </HoverBorderGradient>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div>
@@ -42,21 +43,30 @@ export function YearSelector({
                 as="button"
                 className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2"
               >
-                <span>{selectedYear}</span>
+                <span>{currentSelection}</span>
                 <ChevronDown className="h-4 w-4" />
               </HoverBorderGradient>
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="max-h-60 overflow-y-auto">
-            {availableYears.map((year) => (
-              <DropdownMenuItem
-                key={year}
-                onClick={() => onYearChange(year)}
-                className={selectedYear === year ? "bg-blue-100 dark:bg-blue-900" : ""}
-              >
-                {year}
-              </DropdownMenuItem>
-            ))}
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => handleSelection("Last Year")}
+              className={showLastYear ? "bg-blue-100 dark:bg-blue-900" : ""}
+            >
+              Last Year
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleSelection("2025")}
+              className={!showLastYear && selectedYear === 2025 ? "bg-blue-100 dark:bg-blue-900" : ""}
+            >
+              2025
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleSelection("2024")}
+              className={!showLastYear && selectedYear === 2024 ? "bg-blue-100 dark:bg-blue-900" : ""}
+            >
+              2024
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
