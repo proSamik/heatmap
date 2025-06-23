@@ -59,6 +59,17 @@ export function getLastYearRange(): { start: string; end: string } {
   }
 }
 
+export function getLast365DaysRange(): { start: string; end: string } {
+  const today = new Date()
+  const days365Ago = new Date(today)
+  days365Ago.setDate(today.getDate() - 365)
+
+  return {
+    start: formatDate(days365Ago),
+    end: formatDate(today),
+  }
+}
+
 export function getYearRange(year: number): { start: string; end: string } {
   return {
     start: `${year}-01-01`,
@@ -97,21 +108,23 @@ export function getWeeksInYear(year: number, lastDataDate?: string): (Date | nul
   let currentWeek: (Date | null)[] = []
   const currentDate = new Date(firstDay)
 
-  // Continue until we have enough weeks to cover the data
-  const weeksNeeded = Math.ceil((actualEndDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 4
-  let weekCount = 0
-
-  while (weekCount < weeksNeeded) {
+  // Generate weeks until we've covered all data up to the actual end date
+  while (currentDate <= actualEndDate || currentWeek.length > 0) {
     if (currentDate.getDay() === 0 && currentWeek.length > 0) {
       weeks.push([...currentWeek])
       currentWeek = []
-      weekCount++
+      
+      // If we've passed the actual end date and the week is complete, break
+      if (currentDate > actualEndDate) {
+        break
+      }
     }
 
     if (currentDate.getFullYear() === year && currentDate <= actualEndDate) {
       currentWeek.push(new Date(currentDate))
-    } else if (currentDate.getFullYear() === year || currentWeek.length > 0) {
-      currentWeek.push(null) // Empty cell for dates outside range
+    } else if (currentWeek.length > 0) {
+      // Only add null cells if we're in the middle of a week
+      currentWeek.push(null)
     }
 
     currentDate.setDate(currentDate.getDate() + 1)
@@ -122,8 +135,68 @@ export function getWeeksInYear(year: number, lastDataDate?: string): (Date | nul
     }
   }
 
+  // Add the last week if it has content
   if (currentWeek.length > 0) {
-    weeks.push(currentWeek)
+    // Only include if it has at least one valid date
+    const hasValidDate = currentWeek.some(date => date !== null && date <= actualEndDate)
+    if (hasValidDate) {
+      weeks.push(currentWeek)
+    }
+  }
+
+  return weeks
+}
+
+export function getWeeksForLast365Days(): (Date | null)[][] {
+  const weeks: (Date | null)[][] = []
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const days365Ago = new Date(today)
+  days365Ago.setDate(today.getDate() - 365)
+
+  // Find the first Sunday of the range or before start date
+  const firstDay = new Date(days365Ago)
+  while (firstDay.getDay() !== 0) {
+    firstDay.setDate(firstDay.getDate() - 1)
+  }
+
+  let currentWeek: (Date | null)[] = []
+  const currentDate = new Date(firstDay)
+
+  // Generate weeks until we've covered all data up to today
+  while (currentDate <= today || currentWeek.length > 0) {
+    if (currentDate.getDay() === 0 && currentWeek.length > 0) {
+      weeks.push([...currentWeek])
+      currentWeek = []
+      
+      // If we've passed today and the week is complete, break
+      if (currentDate > today) {
+        break
+      }
+    }
+
+    if (currentDate >= days365Ago && currentDate <= today) {
+      currentWeek.push(new Date(currentDate))
+    } else if (currentWeek.length > 0) {
+      // Only add null cells if we're in the middle of a week
+      currentWeek.push(null)
+    }
+
+    currentDate.setDate(currentDate.getDate() + 1)
+    
+    // Break if we've gone too far past today
+    if (currentDate > new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+      break
+    }
+  }
+
+  // Add the last week if it has content
+  if (currentWeek.length > 0) {
+    // Only include if it has at least one valid date
+    const hasValidDate = currentWeek.some(date => date !== null && date <= today)
+    if (hasValidDate) {
+      weeks.push(currentWeek)
+    }
   }
 
   return weeks
