@@ -9,7 +9,7 @@ import { RefreshPanel } from "@/components/refresh-panel"
 import { AuroraBackground } from "@/components/ui/aurora-background"
 import type { ContributionData, MetricsData } from "@/lib/types"
 import { calculateStreak } from "@/lib/utils/streak"
-import { getLastYearRange, getYearRange, formatDate } from "@/lib/utils/date"
+import { getLast365DaysRange, getYearRange, formatDate } from "@/lib/utils/date"
 import { Loader2 } from "lucide-react"
 
 export default function HomePage() {
@@ -78,7 +78,7 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    const dateRange = showLastYear ? getLastYearRange() : getYearRange(selectedYear)
+    const dateRange = showLastYear ? getLast365DaysRange() : getYearRange(selectedYear)
     
     // First load: fetch data normally
     fetchData(dateRange.start, dateRange.end)
@@ -208,6 +208,7 @@ export default function HomePage() {
                 year={showLastYear ? new Date().getFullYear() : selectedYear}
                 platform="github"
                 title={`${githubData.reduce((sum, d) => sum + d.count, 0)} contributions in ${showLastYear ? "the last year" : selectedYear}`}
+                showLastYear={showLastYear}
               />
 
               <Heatmap
@@ -215,6 +216,7 @@ export default function HomePage() {
                 year={showLastYear ? new Date().getFullYear() : selectedYear}
                 platform="youtube"
                 title={`${youtubeData.reduce((sum, d) => sum + d.count, 0)} uploads in ${showLastYear ? "the last year" : selectedYear}`}
+                showLastYear={showLastYear}
               />
             </motion.div>
 
