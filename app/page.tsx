@@ -8,6 +8,7 @@ import { SyncLoader } from "@/components/sync-loader"
 import { HeatmapData } from "@/components/heatmap-data"
 import type { ContributionData } from "@/lib/types"
 import { getLast365DaysRange, getYearRange, formatDate } from "@/lib/utils/date"
+import { Github } from "lucide-react"
 
 export default function HomePage() {
   const [githubData, setGithubData] = useState<ContributionData[]>([])
@@ -111,15 +112,13 @@ export default function HomePage() {
           // Refresh the display data after auto-refresh
           fetchData(dateRange.start, dateRange.end)
         })
-      }, 1000)
+      }, 100)
     }
   }, [selectedYear, showLastYear, refreshKey])
 
   const handleRefreshComplete = () => {
     setRefreshKey((prev) => prev + 1)
   }
-
-
 
   const handleLoadingComplete = () => {
     setLoading(false);
@@ -210,7 +209,16 @@ export default function HomePage() {
               <RefreshPanel onRefreshComplete={handleRefreshComplete} />
             </motion.div>
           </div>
+          <footer className="text-center py-4">
+            <div className="flex items-center justify-center">
+              <span>Clone this for yourself here:</span>
+              <a href="https://github.com/proSamik/heatmap" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline ml-2 flex items-center">
+                <Github className="h-4 w-4 mr-1" /> proSamik/heatmap
+              </a>
+            </div>
+          </footer>
         </div>
+        
       )}
     </motion.div>
   )
