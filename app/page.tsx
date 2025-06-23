@@ -201,31 +201,39 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.3, duration: 0.8 }}
-              className="space-y-6 flex flex-col items-center" // Centering the cards
+              className="space-y-6"
+              id="heatmaps-container"
             >
-              <Heatmap
-                data={githubData}
-                year={showLastYear ? new Date().getFullYear() : selectedYear}
-                platform="github"
-                title={`${githubData.reduce((sum, d) => sum + d.count, 0)} contributions in ${showLastYear ? "the last year" : selectedYear}`}
-                showLastYear={showLastYear}
-              />
+              <div id="github-heatmap">
+                <Heatmap
+                  data={githubData}
+                  year={showLastYear ? new Date().getFullYear() : selectedYear}
+                  platform="github"
+                  title={`${githubData.reduce((sum, d) => sum + d.count, 0)} contributions in ${showLastYear ? "the last year" : selectedYear}`}
+                  showLastYear={showLastYear}
+                />
+              </div>
 
-              <Heatmap
-                data={youtubeData}
-                year={showLastYear ? new Date().getFullYear() : selectedYear}
-                platform="youtube"
-                title={`${youtubeData.reduce((sum, d) => sum + d.count, 0)} uploads in ${showLastYear ? "the last year" : selectedYear}`}
-                showLastYear={showLastYear}
-              />
+              <div id="youtube-heatmap">
+                <Heatmap
+                  data={youtubeData}
+                  year={showLastYear ? new Date().getFullYear() : selectedYear}
+                  platform="youtube"
+                  title={`${youtubeData.reduce((sum, d) => sum + d.count, 0)} uploads in ${showLastYear ? "the last year" : selectedYear}`}
+                  showLastYear={showLastYear}
+                />
+              </div>
             </motion.div>
 
-            {/* Refresh Panel at Bottom */}
+            {/* Large spacing before admin panel */}
+            <div className="h-32"></div>
+
+            {/* Admin Panel at Very Bottom */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.5, duration: 0.8 }}
-              className="pb-8"
+              className="pb-8 pt-16"
             >
               <RefreshPanel onRefreshComplete={handleRefreshComplete} />
             </motion.div>
