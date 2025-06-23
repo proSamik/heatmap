@@ -149,51 +149,26 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
 
   // ... (keeping your existing useEffect hooks) ...
   useEffect(() => {
-    const scrollToCurrentDate = () => {
+    const scrollToLatestDate = () => {
       if (scrollContainerRef.current) {
         const container = scrollContainerRef.current
-        const isMobile = window.innerWidth < 768
-        const hasOverflow = container.scrollWidth > container.clientWidth
         
-        if (isMobile || hasOverflow) {
-          const today = formatDate(new Date())
-          const lastDataDate = data.length > 0 
-            ? data.reduce((latest, current) => current.date > latest ? current.date : latest, data[0].date)
-            : today
-          
-          let targetWeekIndex = -1
-          const targetDate = lastDataDate > today ? today : lastDataDate
-          
-          for (let weekIndex = 0; weekIndex < weeks.length; weekIndex++) {
-            const week = weeks[weekIndex]
-            for (const date of week) {
-              if (date && formatDate(date) === targetDate) {
-                targetWeekIndex = weekIndex
-                break
-              }
-            }
-            if (targetWeekIndex !== -1) break
-          }
-          
-          if (targetWeekIndex !== -1) {
-            const weekWidth = 16
-            const targetScrollPosition = Math.max(0, (targetWeekIndex - 10) * weekWidth)
-            const maxScroll = container.scrollWidth - container.clientWidth
-            
-            container.scrollLeft = Math.min(targetScrollPosition, maxScroll)
-          } else {
-            container.scrollLeft = container.scrollWidth - container.clientWidth
-          }
+        // Always scroll to the end to show the latest dates
+        const maxScroll = container.scrollWidth - container.clientWidth
+        if (maxScroll > 0) {
+          // Smooth scroll to the end to show the most recent activity
+          container.scrollLeft = maxScroll
         }
       }
     }
 
-    const timer = setTimeout(scrollToCurrentDate, 100)
-    window.addEventListener('resize', scrollToCurrentDate)
+    // Small delay to ensure content is rendered and scroll dimensions are available
+    const timer = setTimeout(scrollToLatestDate, 150)
+    window.addEventListener('resize', scrollToLatestDate)
     
     return () => {
       clearTimeout(timer)
-      window.removeEventListener('resize', scrollToCurrentDate)
+      window.removeEventListener('resize', scrollToLatestDate)
     }
   }, [weeks, data, monthLabels])
 
@@ -355,29 +330,11 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
       
         <CardContent className="pt-0">
           <div className="relative heatmap-container">
-            <div ref={scrollContainerRef} className="overflow-x-auto pb-2">
-              <div style={{ width: `${weeks.length * 16 + 32}px`, minWidth: "700px" }}>
-                <div 
-                  className="relative mb-2 ml-8"
-                  style={{ width: `${Math.max(weeks.length * 16, monthLabels.length > 0 ? Math.max(...monthLabels.map(m => m.position + 50)) : 0)}px`, height: '16px' }}
-                >
-                  {monthLabels.map((monthLabel, index) => (
-                    <div
-                      key={`${monthLabel.month}-${index}`}
-                      className="absolute text-xs text-gray-600 text-center"
-                      style={{ 
-                        left: `${monthLabel.position}px`,
-                        width: `${monthLabel.width}px`,
-                        top: 0
-                      }}
-                    >
-                      {MONTHS[monthLabel.month]}
-                    </div>
-                  ))}
-                </div>
-
+            <div className="pb-2">
+              <div>
                 <div className="flex">
-                  <div className="flex flex-col mr-2 text-xs text-gray-600 w-6">
+                  {/* Fixed Day labels - positioned outside scrollable area */}
+                  <div className="flex flex-col mr-2 text-xs text-gray-600 w-6 flex-shrink-0">
                     {DAYS.map((day, index) => (
                       <div key={day} className="h-3 flex items-center" style={{ marginBottom: "2px" }}>
                         {index % 2 === 1 ? day : ""}
@@ -385,40 +342,66 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
                     ))}
                   </div>
 
-                  <div className="flex gap-1">
-                    {weeks.map((week, weekIndex) => (
-                      <div key={weekIndex} className="flex flex-col gap-1">
-                        {week.map((date, dayIndex) => {
-                          const dateStr = date ? formatDate(date) : ""
-                          const dayData = dateStr ? dataMap.get(dateStr) : null
-                          const count = dayData?.count || 0
-                          const details = dayData?.details
-                          const intensity = dateStr ? intensityMap.get(dateStr) || 0 : 0
-
-                          return (
-                            <div
-                              key={dayIndex}
-                              className={cn(
-                                "w-3 h-3 rounded-sm border border-gray-400 cursor-pointer transition-all duration-300",
-                                date ? "hover:animate-pulse hover:shadow-lg hover:scale-110" : "",
-                                date ? getIntensityColor(intensity, platform) : "bg-transparent border-transparent",
-                                intensity > 0 && "hover:shadow-blue-500/80 hover:shadow-lg"
-                              )}
-                              style={{
-                                animation: hoveredDay?.date === dateStr ? "heatmap-glow 0.5s ease-in-out infinite alternate" : undefined,
-                                boxShadow: hoveredDay?.date === dateStr ? "0 0 10px rgba(59, 130, 246, 0.8)" : undefined
-                              }}
-                              onMouseEnter={(e) => {
-                                if (date) {
-                                  handleMouseEnter(e, dateStr, count, details)
-                                }
-                              }}
-                              onMouseLeave={handleMouseLeave}
-                            />
-                          )
-                        })}
+                  {/* Scrollable container for both month labels and heatmap */}
+                  <div className="overflow-x-auto" ref={scrollContainerRef}>
+                    <div style={{ minWidth: `${weeks.length * 16}px` }}>
+                      {/* Month labels - scrollable with the content */}
+                      <div 
+                        className="relative mb-2"
+                        style={{ width: `${weeks.length * 16}px`, height: '16px' }}
+                      >
+                        {monthLabels.map((monthLabel, index) => (
+                          <div
+                            key={`${monthLabel.month}-${index}`}
+                            className="absolute text-xs text-gray-600 text-center"
+                            style={{ 
+                              left: `${monthLabel.position}px`,
+                              width: `${monthLabel.width}px`,
+                              top: 0
+                            }}
+                          >
+                            {MONTHS[monthLabel.month]}
+                          </div>
+                        ))}
                       </div>
-                    ))}
+
+                      {/* Heatmap grid */}
+                      <div className="flex gap-1">
+                        {weeks.map((week, weekIndex) => (
+                          <div key={weekIndex} className="flex flex-col gap-1 flex-shrink-0">
+                            {week.map((date, dayIndex) => {
+                              const dateStr = date ? formatDate(date) : ""
+                              const dayData = dateStr ? dataMap.get(dateStr) : null
+                              const count = dayData?.count || 0
+                              const details = dayData?.details
+                              const intensity = dateStr ? intensityMap.get(dateStr) || 0 : 0
+
+                              return (
+                                <div
+                                  key={dayIndex}
+                                  className={cn(
+                                    "w-3 h-3 rounded-sm border border-gray-400 cursor-pointer transition-all duration-300",
+                                    date ? "hover:animate-pulse hover:shadow-lg hover:scale-110" : "",
+                                    date ? getIntensityColor(intensity, platform) : "bg-transparent border-transparent",
+                                    intensity > 0 && "hover:shadow-blue-500/80 hover:shadow-lg"
+                                  )}
+                                  style={{
+                                    animation: hoveredDay?.date === dateStr ? "heatmap-glow 0.5s ease-in-out infinite alternate" : undefined,
+                                    boxShadow: hoveredDay?.date === dateStr ? "0 0 10px rgba(59, 130, 246, 0.8)" : undefined
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (date) {
+                                      handleMouseEnter(e, dateStr, count, details)
+                                    }
+                                  }}
+                                  onMouseLeave={handleMouseLeave}
+                                />
+                              )
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
