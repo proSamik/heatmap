@@ -53,49 +53,43 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
     // Calculate month positions based on actual weeks
     let monthLabels: { month: number, position: number, width: number }[] = []
     
-    if (showLastYear) {
-      // For last 365 days, calculate month positions based on week distribution
-      const monthWeekCounts = new Map<number, { start: number, count: number, end: number }>()
-      
-      weeks.forEach((week, weekIndex) => {
-        const monthsInWeek = new Set<number>()
-        week.forEach(date => {
-          if (date) {
-            monthsInWeek.add(date.getMonth())
-          }
+          if (showLastYear) {
+        // For last 365 days, create a simple chronological month list
+        const monthPositions = new Map<string, { month: number, firstWeek: number, lastWeek: number }>()
+        
+        weeks.forEach((week, weekIndex) => {
+          week.forEach(date => {
+            if (date) {
+              const month = date.getMonth()
+              const year = date.getFullYear()
+              const key = `${year}-${month}` // Unique key for month-year
+              
+              if (!monthPositions.has(key)) {
+                monthPositions.set(key, {
+                  month,
+                  firstWeek: weekIndex,
+                  lastWeek: weekIndex
+                })
+              } else {
+                monthPositions.get(key)!.lastWeek = weekIndex
+              }
+            }
+          })
         })
         
-        // For each month in this week, track its span
-        monthsInWeek.forEach(month => {
-          if (!monthWeekCounts.has(month)) {
-            monthWeekCounts.set(month, { start: weekIndex, count: 0, end: weekIndex })
-          }
-          const current = monthWeekCounts.get(month)!
-          current.count++
-          current.end = weekIndex // Update end position
-        })
-      })
-      
-      // Convert to array, sort chronologically, and calculate positions
-      const sortedMonths = Array.from(monthWeekCounts.entries()).sort(([, a], [, b]) => a.start - b.start)
-      
-      monthLabels = sortedMonths.map(([month, data]) => ({
-        month,
-        position: data.start * 16, // 16px per week
-        width: data.count * 16
-      }))
-      
-      // Adjust overlapping months by ensuring minimum spacing
-      for (let i = 1; i < monthLabels.length; i++) {
-        const prev = monthLabels[i - 1]
-        const current = monthLabels[i]
-        const minSpacing = 50 // Minimum pixels between month labels
+        // Convert to sorted array by first appearance
+        const sortedEntries = Array.from(monthPositions.entries()).sort(([, a], [, b]) => a.firstWeek - b.firstWeek)
         
-        if (current.position < prev.position + minSpacing) {
-          current.position = prev.position + minSpacing
-        }
-      }
-    } else {
+        // Create month labels positioned at the center of each month's span
+        const allLabels = sortedEntries.map(([key, data]) => ({
+          month: data.month,
+          position: ((data.firstWeek + data.lastWeek) / 2) * 16, // Center position
+          width: 50
+        }))
+        
+        // Show all months - no filtering
+        monthLabels = allLabels
+      } else {
       // For specific years, distribute months evenly across all weeks
       const monthsToShow = Array.from({ length: 12 }, (_, i) => i)
       const totalWidth = weeks.length * 16
@@ -300,8 +294,9 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
                   className="relative group text-red-300 cursor-pointer hover:text-red-200 hover:underline break-all" 
                   onClick={(e) => {
                     e.stopPropagation()
-                    if (video.url) {
-                      window.open(video.url, '_blank')
+                    const url = video.url || (video.id ? `https://youtu.be/${video.id}` : null)
+                    if (url) {
+                      window.open(url, '_blank')
                     }
                   }}
                 >
@@ -309,9 +304,9 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
                   
                   {/* Thumbnail preview on hover */}
                   {video.thumbnail && (
-                    <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-[99999] bg-gray-900 border border-gray-700 rounded p-2 shadow-lg pointer-events-none">
+                    <div className="fixed left-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 border border-gray-700 rounded p-2 shadow-lg pointer-events-none" style={{ zIndex: 2147483647 }}>
                       <img 
-                        src={video.thumbnail} 
+                        src={video.thumbnail || (video.id ? `https://img.youtube.com/vi/${video.id}/mqdefault.jpg` : '')} 
                         alt={video.title}
                         className="w-32 h-18 object-cover rounded"
                         onError={(e) => {
@@ -355,7 +350,7 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
   }
 
   return (
-    <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:border-blue-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20">
+    <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:border-blue-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 max-w-5xl">
       <CardHeader className="pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <CardTitle className="text-lg font-semibold text-gray-900">{title}</CardTitle>
