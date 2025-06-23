@@ -236,14 +236,14 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
     return (
       <div 
         className={cn(
-          "bg-gray-900 text-white text-xs p-2 rounded-lg shadow-lg pointer-events-auto z-50",
-          showExpanded ? "max-w-md max-h-80" : "max-w-lg" // Increased width of the tooltip
+          "bg-gray-900 text-white text-xs p-2 rounded-lg shadow-lg pointer-events-auto relative",
+          showExpanded ? "max-w-xl max-h-96" : "max-w-2xl"
         )}
         onMouseEnter={handleTooltipMouseEnter}
         onMouseLeave={handleTooltipMouseLeave}
       >
         <div className="font-semibold mb-2">
-          {count} {platform === "github" ? "contributions" : "uploads"} on {formatDisplayDate(date)}
+          {count} {platform === "github" ? "contributions" : "uploads"}
         </div>
 
         {platform === "github" && details?.repos?.length > 0 && count > 0 && (
@@ -458,7 +458,7 @@ export function Heatmap({ data, year, platform, title, showLastYear = false }: H
               className="absolute z-[9999]"
               style={{
                 left: `${hoveredDay.x}px`,
-                top: `${hoveredDay.y - 8}px`, // Position directly above with small gap
+                top: `${hoveredDay.y - 2}px`, // Position directly above with small gap
                 transform: "translate(-50%, -100%)", // Center horizontally and position above
                 pointerEvents: 'auto'
               }}
