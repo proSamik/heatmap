@@ -201,7 +201,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.3, duration: 0.8 }}
-              className="space-y-6"
+              className="space-y-6 flex flex-col items-center" // Centering the cards
             >
               <Heatmap
                 data={githubData}
