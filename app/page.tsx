@@ -1,15 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { motion } from "framer-motion"
-import { Heatmap } from "@/components/heatmap"
-import { MetricsCard } from "@/components/metrics-card"
 import { YearSelector } from "@/components/year-selector"
 import { RefreshPanel } from "@/components/refresh-panel"
-import type { ContributionData, MetricsData } from "@/lib/types"
-import { calculateStreak } from "@/lib/utils/streak"
+import { SyncLoader } from "@/components/sync-loader"
+import { HeatmapData } from "@/components/heatmap-data"
+import type { ContributionData } from "@/lib/types"
 import { getLast365DaysRange, getYearRange, formatDate } from "@/lib/utils/date"
-import { Loader2 } from "lucide-react"
 
 export default function HomePage() {
   const [githubData, setGithubData] = useState<ContributionData[]>([])
@@ -19,12 +17,19 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [minLoadingComplete, setMinLoadingComplete] = useState(false)
 
   const availableYears = Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).reverse()
 
   const fetchData = async (startDate: string, endDate: string, autoRefresh = false) => {
     setLoading(true)
     setError(null)
+    setMinLoadingComplete(false)
+
+    // Set minimum loading time to ensure sync loader shows properly
+    const minLoadingTime = setTimeout(() => {
+      setMinLoadingComplete(true)
+    }, 1000) 
 
     try {
       // Build URLs with auto-refresh logic
@@ -47,9 +52,25 @@ export default function HomePage() {
 
       setGithubData(githubResult.data || [])
       setYoutubeData(youtubeResult.data || [])
+
+      // Wait for minimum loading time to complete before allowing completion
+      if (!minLoadingComplete) {
+        await new Promise(resolve => {
+          const checkMinLoading = () => {
+            if (minLoadingComplete) {
+              resolve(true)
+            } else {
+              setTimeout(checkMinLoading, 100)
+            }
+          }
+          checkMinLoading()
+        })
+      }
     } catch (err) {
+      clearTimeout(minLoadingTime)
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
+      clearTimeout(minLoadingTime)
       setLoading(false)
     }
   }
@@ -98,32 +119,11 @@ export default function HomePage() {
     setRefreshKey((prev) => prev + 1)
   }
 
-  const metricsData: MetricsData = {
-    github: {
-      total: githubData.reduce((sum, d) => sum + d.count, 0),
-      streak: calculateStreak(githubData),
-    },
-    youtube: {
-      total: youtubeData.reduce((sum, d) => sum + d.count, 0),
-      streak: calculateStreak(youtubeData),
-    },
-  }
 
-  if (loading) {
-    return (
-      <motion.div
-        initial={{ opacity: 0.0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
-        className="relative flex flex-col gap-4 items-center justify-center px-4"
-      >
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin text-gray-900" />
-          <span className="text-gray-900">Loading your habit data...</span>
-        </div>
-      </motion.div>
-    )
-  }
+
+  const handleLoadingComplete = () => {
+    setLoading(false);
+  };
 
   if (error) {
     return (
@@ -131,11 +131,17 @@ export default function HomePage() {
         initial={{ opacity: 0.0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
-        className="relative flex flex-col gap-4 items-center justify-center px-4"
+        className="relative flex flex-col gap-4 items-center justify-center px-4 min-h-screen"
       >
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-2">Error</h1>
-          <p className="text-gray-900">{error}</p>
+        <div className="text-center bg-white/95 backdrop-blur-sm p-8 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold text-red-600 mb-2">⚠️ Connection Error</h1>
+          <p className="text-gray-700 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </motion.div>
     )
@@ -148,83 +154,64 @@ export default function HomePage() {
       transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
       className="relative w-full min-h-screen overflow-auto"
     >
-      <div className="container mx-auto px-4 pt-2 w-full">
-        <div className="max-w-7xl mx-auto space-y-2">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.8 }}
-          >
-            <MetricsCard data={metricsData} />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.1, duration: 0.8 }}
-          >
-            <YearSelector
-              selectedYear={selectedYear}
-              availableYears={availableYears}
-              onYearChange={setSelectedYear}
-              showLastYear={showLastYear}
-              onToggleLastYear={() => setShowLastYear(!showLastYear)}
-            />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.3, duration: 0.8 }}
-            className="space-y-6 flex flex-col items-center justify-center" // Center aligned in a column
-            id="heatmaps-container"
-          >
-            <div id="heatmap" className="flex justify-center"> {/* Centering the heatmap */}
-              <Heatmap
-                data={githubData} // Keeping only the GitHub heatmap
-                year={showLastYear ? new Date().getFullYear() : selectedYear}
-                platform="github"
-                title={`${githubData.reduce((sum, d) => sum + d.count, 0)} contributions in ${showLastYear ? "the last year" : selectedYear}`}
-                showLastYear={showLastYear}
-              />
-            </div>
-
-            <div id="youtube-heatmap">
-              <Heatmap
-                data={youtubeData}
-                year={showLastYear ? new Date().getFullYear() : selectedYear}
-                platform="youtube"
-                title={`${youtubeData.reduce((sum, d) => sum + d.count, 0)} uploads in ${showLastYear ? "the last year" : selectedYear}`}
-                showLastYear={showLastYear}
-              />
-            </div>
-          </motion.div>
-
-          {/* Large spacing before admin panel */}
-          <div className="h-32"></div>
-
-          <header className="text-center">
-            <motion.h1 
+      {loading ? (
+        /* Show sync loader while loading */
+        <SyncLoader 
+          loading={loading} 
+          onComplete={handleLoadingComplete}
+          duration={2000}
+        />
+      ) : (
+        /* Show content only when loading is complete */
+        <div className="container mx-auto px-4 pt-2 w-full">
+          <div className="max-w-7xl mx-auto space-y-2">
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="text-3xl md:text-5xl font-bold mb-4 text-gray-900"
+              transition={{ delay: 1.1, duration: 0.8 }}
             >
-              Samik&apos;s Heatmap of Contribution to the world
-            </motion.h1>
-          </header>
+              <YearSelector
+                selectedYear={selectedYear}
+                availableYears={availableYears}
+                onYearChange={setSelectedYear}
+                showLastYear={showLastYear}
+                onToggleLastYear={() => setShowLastYear(!showLastYear)}
+              />
+            </motion.div>
 
-          {/* Admin Panel at Very Bottom */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.5, duration: 0.8 }}
-            className="pb-8 pt-16"
-          >
-            <RefreshPanel onRefreshComplete={handleRefreshComplete} />
-          </motion.div>
+            <HeatmapData
+              githubData={githubData}
+              youtubeData={youtubeData}
+              selectedYear={selectedYear}
+              showLastYear={showLastYear}
+            />
+
+            {/* Large spacing before admin panel */}
+            <div className="h-32"></div>
+
+            <header className="text-center">
+              <motion.h1 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                className="text-3xl md:text-5xl font-bold mb-4 text-gray-900"
+              >
+                Samik&apos;s Heatmap of Contribution to the world
+              </motion.h1>
+            </header>
+
+            {/* Admin Panel at Very Bottom */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5, duration: 0.8 }}
+              className="pb-8 pt-16"
+            >
+              <RefreshPanel onRefreshComplete={handleRefreshComplete} />
+            </motion.div>
+          </div>
         </div>
-      </div>
+      )}
     </motion.div>
   )
 }
