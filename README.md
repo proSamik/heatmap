@@ -18,6 +18,9 @@
    ```
 
 5. Deploy your application:
-   - After test, deploy it to vercel from the github.
+   - After test, deploy it to vercel from the github. 
 
 Make sure to follow these steps to ensure a smooth setup process.
+
+See you, 
+Samik
